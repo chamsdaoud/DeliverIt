@@ -40,7 +40,7 @@ export default function StaffLoginModal({ onClose, onSwitchRegister }) {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email Address</label>
-            <input type="email" placeholder="staff@deliverit.dz" value={email} onChange={e => setEmail(e.target.value)} />
+            <input type="text" placeholder="staff@deliverit.dz" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="form-group">
             <label>Password</label>

@@ -16,15 +16,15 @@ class StaffCredentialsMail extends Mailable
     public string $staffId;
     public string $role;
     public string $email;
-    public string $password;
+    public string $setupUrl;
 
-    public function __construct(string $staffName, string $staffId, string $role, string $email, string $password)
+    public function __construct(string $staffName, string $staffId, string $role, string $email, string $setupUrl)
     {
         $this->staffName = $staffName;
         $this->staffId   = $staffId;
         $this->role      = $role;
         $this->email     = $email;
-        $this->password  = $password;
+        $this->setupUrl  = $setupUrl;
     }
 
     public function envelope(): Envelope

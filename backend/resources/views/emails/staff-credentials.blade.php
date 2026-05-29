@@ -29,6 +29,17 @@
     .greeting { font-size: 1.15rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
     .intro { font-size: .92rem; color: #64748b; line-height: 1.7; margin-bottom: 28px; }
 
+    .staff-id-highlight {
+      background: #1a2e6e;
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .staff-id-label { font-size: .78rem; color: rgba(255,255,255,.7); margin-bottom: 6px; }
+    .staff-id-value { font-size: 1.8rem; font-weight: 800; letter-spacing: 4px; color: #f97316; }
+
     .credentials-box {
       background: #f8fafc;
       border: 1.5px solid #e2e8f0;
@@ -55,51 +66,42 @@
     .credential-label { font-size: .82rem; color: #94a3b8; font-weight: 500; }
     .credential-value { font-size: .92rem; font-weight: 700; color: #1e293b; }
 
-    .staff-id-highlight {
-      background: #1a2e6e;
-      color: #fff;
-      padding: 16px 24px;
-      border-radius: 10px;
+    .setup-box {
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
       text-align: center;
-      margin-bottom: 28px;
     }
-    .staff-id-label { font-size: .78rem; color: rgba(255,255,255,.7); margin-bottom: 6px; }
-    .staff-id-value { font-size: 1.8rem; font-weight: 800; letter-spacing: 4px; color: #f97316; }
+    .setup-box-title { font-size: .84rem; font-weight: 700; color: #166534; margin-bottom: 8px; }
+    .setup-box-sub { font-size: .82rem; color: #15803d; line-height: 1.6; margin-bottom: 18px; }
 
-    .instructions {
-      background: #fff7ed;
-      border: 1px solid #fed7aa;
-      border-radius: 10px;
-      padding: 16px 20px;
-      margin-bottom: 28px;
-    }
-    .instructions-title { font-size: .82rem; font-weight: 700; color: #c2410c; margin-bottom: 8px; }
-    .instructions ol { padding-left: 18px; }
-    .instructions li { font-size: .85rem; color: #92400e; line-height: 1.8; }
-
-    .cta {
-      text-align: center;
-      margin-bottom: 28px;
-    }
+    .cta { text-align: center; margin-bottom: 28px; }
     .cta-btn {
       display: inline-block;
-      background: #1a2e6e;
+      background: #f97316;
       color: #fff;
       text-decoration: none;
       padding: 14px 36px;
       border-radius: 10px;
       font-weight: 700;
       font-size: .95rem;
-      letter-spacing: .3px;
     }
 
-    .warning {
-      font-size: .82rem;
-      color: #94a3b8;
+    .expiry-note {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 28px;
+      font-size: .84rem;
+      color: #92400e;
       text-align: center;
-      line-height: 1.6;
     }
-    .warning strong { color: #dc2626; }
+
+    .fallback { font-size: .8rem; color: #94a3b8; line-height: 1.6; margin-bottom: 20px; }
+    .fallback a { color: #1a2e6e; word-break: break-all; }
 
     .footer {
       background: #f8fafc;
@@ -121,19 +123,19 @@
     </div>
 
     <div class="body">
-      <p class="greeting">Welcome, {{ $staffName }}!</p>
+      <p class="greeting">Welcome to DeliverIt, {{ $staffName }}!</p>
       <p class="intro">
         Your staff account has been created on the <strong>DeliverIt</strong> delivery management platform.
-        Below are your login credentials. Please keep them safe and do not share them with anyone.
+        Your Staff ID is shown below. Click the button to set your own password and activate your account.
       </p>
 
-      <!-- Staff ID highlight -->
+      <!-- Staff ID -->
       <div class="staff-id-highlight">
         <div class="staff-id-label">YOUR STAFF ID</div>
         <div class="staff-id-value">{{ $staffId }}</div>
       </div>
 
-      <!-- Credentials box -->
+      <!-- Account details (no password shown) -->
       <div class="credentials-box">
         <div class="credentials-title">Account Details</div>
         <div class="credential-row">
@@ -148,33 +150,28 @@
           <span class="credential-label">Email</span>
           <span class="credential-value">{{ $email }}</span>
         </div>
-        <div class="credential-row">
-          <span class="credential-label">Temporary Password</span>
-          <span class="credential-value" style="color: #f97316; letter-spacing: 1px;">{{ $password }}</span>
+      </div>
+
+      <!-- Password setup CTA -->
+      <div class="setup-box">
+        <div class="setup-box-title">✅ One last step — set your password</div>
+        <div class="setup-box-sub">
+          Click the button below to create your own secure password.<br/>
+          You will use your <strong>Staff ID</strong> + this password to log in.
         </div>
       </div>
 
-      <!-- Instructions -->
-      <div class="instructions">
-        <div class="instructions-title">How to access the system</div>
-        <ol>
-          <li>Go to the DeliverIt platform</li>
-          <li>Click <strong>"Staff Portal"</strong> in the top navigation</li>
-          <li>Select the <strong>"Agency Staff"</strong> tab</li>
-          <li>Enter your <strong>Staff ID</strong> and password to login</li>
-          <li>Change your password after first login</li>
-        </ol>
-      </div>
-
-      <!-- CTA -->
       <div class="cta">
-        <a href="http://localhost:5173" class="cta-btn">Access DeliverIt Platform</a>
+        <a href="{{ $setupUrl }}" class="cta-btn">Set My Password</a>
       </div>
 
-      <p class="warning">
-        <strong>Important:</strong> This email contains sensitive information.
-        Do not forward or share your credentials with anyone.
-        If you did not expect this email, please contact your administrator immediately.
+      <div class="expiry-note">
+        ⏱ This setup link expires in <strong>48 hours</strong>. If it expires, ask your administrator to resend it.
+      </div>
+
+      <p class="fallback">
+        If the button doesn't work, copy and paste this link into your browser:<br/>
+        <a href="{{ $setupUrl }}">{{ $setupUrl }}</a>
       </p>
     </div>
 

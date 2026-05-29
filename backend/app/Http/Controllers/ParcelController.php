@@ -9,7 +9,6 @@ use Illuminate\Support\Str;
 
 class ParcelController extends Controller
 {
-    // Public: real-time stats
     public function stats()
     {
         $total     = Parcel::count();
@@ -18,7 +17,7 @@ class ParcelController extends Controller
         return response()->json(['wilayas' => 69, 'delivered' => $delivered, 'successRate' => $rate]);
     }
 
-    // Public: track + history
+    // Track by code
     public function track($code)
     {
         $parcel = Parcel::with('statusHistory')->where('tracking_code', strtoupper($code))->first();
@@ -28,7 +27,27 @@ class ParcelController extends Controller
         return response()->json($parcel);
     }
 
-    // Public: confirm reception
+    // Search by phone number (public)
+    public function searchByPhone(Request $request)
+    {
+        $request->validate(['phone' => 'required|string|min:6']);
+        $phone = $request->phone;
+
+        $parcels = Parcel::where('receiver_phone', 'like', "%{$phone}%")
+            ->orWhere('sender_phone', 'like', "%{$phone}%")
+            ->latest()
+            ->get(['id', 'tracking_code', 'status', 'receiver_name', 'sender_name',
+                   'origin_wilaya', 'destination_wilaya', 'pickup_location', 'destination',
+                   'payment_method', 'created_at', 'updated_at']);
+
+        if ($parcels->isEmpty()) {
+            return response()->json(['message' => 'No parcels found for this phone number.'], 404);
+        }
+
+        return response()->json($parcels);
+    }
+
+    // Confirm reception
     public function confirmReception(Request $request, $id)
     {
         $request->validate([
@@ -62,39 +81,49 @@ class ParcelController extends Controller
         return response()->json($parcel);
     }
 
-    // Agent: list all parcels
     public function index()
     {
         return response()->json(Parcel::latest()->get());
     }
 
-    // Agent: create parcel
     public function store(Request $request)
     {
         $request->validate([
-            'sender_name'      => 'required|string',
-            'sender_phone'     => 'required|string',
+            'sender_name'      => ['required', 'string', 'min:3', 'regex:/^[\pL\s\-\']+$/u'],
+            'sender_phone'     => ['required', 'string', 'regex:/^(\+213|0)[\d\s]{7,12}$/'],
             'pickup_location'  => 'required|string',
-            'receiver_name'    => 'required|string',
-            'receiver_phone'   => 'required|string',
+            'receiver_name'    => ['required', 'string', 'min:3', 'regex:/^[\pL\s\-\']+$/u'],
+            'receiver_phone'   => ['required', 'string', 'regex:/^(\+213|0)[\d\s]{7,12}$/'],
             'destination'      => 'required|string',
             'delivery_address' => 'nullable|string',
-            'description'      => 'nullable|string',
-            'weight'           => 'nullable|numeric',
+            'description'      => 'nullable|string|max:200',
+            'weight'           => 'nullable|numeric|min:0.01|max:999',
             'payment_method'   => 'required|in:cash,online',
+        ], [
+            'sender_name.min'      => 'Sender name must be at least 3 characters.',
+            'sender_name.regex'    => 'Sender name must contain letters only.',
+            'sender_phone.regex'   => 'Please enter a valid Algerian phone number for sender.',
+            'receiver_name.min'    => 'Receiver name must be at least 3 characters.',
+            'receiver_name.regex'  => 'Receiver name must contain letters only.',
+            'receiver_phone.regex' => 'Please enter a valid Algerian phone number for receiver.',
+            'description.max'      => 'Description cannot exceed 200 characters.',
+            'weight.min'           => 'Weight must be greater than 0.',
+            'weight.max'           => 'Weight cannot exceed 999 kg.',
         ]);
 
-        $deliveryType = $request->pickup_location === $request->destination ? 'intra' : 'inter';
+        $originWilaya = explode(' - ', $request->pickup_location)[0];
+        $destWilaya   = explode(' - ', $request->destination)[0];
+        $deliveryType = $originWilaya === $destWilaya ? 'intra' : 'inter';
 
         $parcel = Parcel::create([
             'tracking_code'      => 'DZ-' . date('Y') . '-' . strtoupper(Str::random(6)),
             'sender_name'        => $request->sender_name,
             'sender_phone'       => $request->sender_phone,
-            'origin_wilaya'      => $request->pickup_location,
+            'origin_wilaya'      => $originWilaya,
             'pickup_location'    => $request->pickup_location,
             'receiver_name'      => $request->receiver_name,
             'receiver_phone'     => $request->receiver_phone,
-            'destination_wilaya' => $request->destination,
+            'destination_wilaya' => $destWilaya,
             'destination'        => $request->destination,
             'delivery_address'   => $request->delivery_address,
             'description'        => $request->description,
@@ -105,7 +134,6 @@ class ParcelController extends Controller
             'created_by'         => auth()->id(),
         ]);
 
-        // Log initial status
         ParcelStatusHistory::create([
             'parcel_id'       => $parcel->id,
             'status'          => 'pending',
@@ -116,23 +144,51 @@ class ParcelController extends Controller
         return response()->json($parcel, 201);
     }
 
-    // Update status + log history
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status'         => 'required|in:pending,registered,assigned,accepted,refused,out_for_delivery,delivered,failed,confirmed',
-            'failure_reason' => 'nullable|string|max:500',
+            'status'          => 'required|in:pending,registered,assigned,accepted,refused,out_for_delivery,delivered,failed,confirmed',
+            'failure_reason'  => 'nullable|string|max:500',
+            'refusal_reason'  => 'nullable|string|max:500',
         ]);
 
         $parcel = Parcel::findOrFail($id);
+
+        // Driver refusal — revert to registered so agent can reassign
+        if ($request->status === 'refused') {
+            $reason = $request->refusal_reason ?? 'No reason provided';
+
+            $parcel->update([
+                'status'          => 'registered',
+                'refusal_reason'  => $reason,
+                'delivery_man_id' => null,
+            ]);
+
+            ParcelStatusHistory::create([
+                'parcel_id'       => $parcel->id,
+                'status'          => 'refused',
+                'changed_by_name' => auth()->user()->name,
+                'note'            => 'Refused by driver: ' . $reason,
+            ]);
+
+            if ($parcel->created_by) {
+                \App\Models\Notification::create([
+                    'user_id'   => $parcel->created_by,
+                    'parcel_id' => $parcel->id,
+                    'message'   => 'Driver ' . auth()->user()->name . ' refused parcel ' . $parcel->tracking_code . ': ' . $reason,
+                    'is_read'   => false,
+                ]);
+            }
+
+            return response()->json($parcel->fresh());
+        }
+
         $parcel->update([
             'status'         => $request->status,
             'failure_reason' => $request->failure_reason ?? $parcel->failure_reason,
         ]);
 
-        // Build note
-        $note = null;
-        if ($request->failure_reason) $note = 'Reason: ' . $request->failure_reason;
+        $note = $request->failure_reason ? 'Reason: ' . $request->failure_reason : null;
 
         ParcelStatusHistory::create([
             'parcel_id'       => $parcel->id,
@@ -144,7 +200,6 @@ class ParcelController extends Controller
         return response()->json($parcel);
     }
 
-    // Assign + log history
     public function assign(Request $request, $id)
     {
         $request->validate(['delivery_man_id' => 'required|exists:users,id']);
@@ -165,7 +220,6 @@ class ParcelController extends Controller
         return response()->json($parcel);
     }
 
-    // Driver: my parcels
     public function driverParcels()
     {
         $parcels = Parcel::where('delivery_man_id', auth()->id())->latest()->get();

@@ -54,29 +54,18 @@ function InstagramIcon() {
 export default function Footer() {
   return (
     <footer className="footer">
-      <div className="footer-grid">
-        <div>
+      <div className="footer-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           <div className="footer-logo"><BoxIcon /> DeliverIt</div>
-          <p className="footer-tagline">Delivering excellence across all 69 wilayas of Algeria with speed and reliability.</p>
+          <p className="footer-tagline">Delivering excellence across all 69 wilayas of Algeria.</p>
         </div>
-        <div className="footer-col">
-          <h4>Quick Links</h4>
-          <a href="#">About Us</a>
-          <a href="#">Services</a>
-          <a href="#">Pricing</a>
-          <a href="#">Coverage Areas</a>
-        </div>
-        <div className="footer-col">
-          <h4>Support</h4>
-          <a href="#">Help Center</a>
-          <a href="#">Track Package</a>
-          <a href="#">FAQ</a>
-          <a href="#">Contact Us</a>
-        </div>
-        <div className="footer-col">
-          <h4>Contact</h4>
-          <div className="footer-contact-item"><PhoneIcon /> +213 123 456 789</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:12, alignItems:'center', textAlign:'center' }}>
+          <h4 style={{ color:'#fff', fontWeight:700, fontSize:'.95rem', margin:0 }}>Contact</h4>
+          <div className="footer-contact-item"><PhoneIcon /> +213 555 000 000</div>
           <div className="footer-contact-item"><MailIcon /> info@deliverit.dz</div>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:12, alignItems:'flex-end' }}>
+          <h4 style={{ color:'#fff', fontWeight:700, fontSize:'.95rem', margin:0 }}>Follow Us</h4>
           <div className="footer-socials">
             <a href="#" aria-label="Facebook"><FacebookIcon /></a>
             <a href="#" aria-label="Twitter"><TwitterIcon /></a>

@@ -3,13 +3,17 @@ import api from '../../services/api'
 import DriverSidebar from '../../components/driver/DriverSidebar'
 import DriverParcelList from '../../components/driver/DriverParcelList'
 import { TruckIcon, LogoutIcon } from '../../components/Icons'
+import { ToastContainer, useToast } from '../../components/Toast'
+import StaffProfileModal from '../../components/StaffProfileModal'
 import '../../styles/agent.css'
 import '../../styles/driver.css'
 
 export default function DriverDashboard() {
   const [parcels, setParcels] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter]   = useState('all')
+  const [filter, setFilter]     = useState('all')
+  const [showProfile, setShowProfile] = useState(false)
+  const { toasts, toast, removeToast } = useToast()
 
   const fetchParcels = async () => {
     setLoading(true)
@@ -21,7 +25,6 @@ export default function DriverDashboard() {
   useEffect(() => { fetchParcels() }, [])
 
   const filtered = filter === 'all' ? parcels : parcels.filter(p => p.status === filter)
-
   const stats = {
     total:            parcels.length,
     assigned:         parcels.filter(p => p.status === 'assigned').length,
@@ -50,9 +53,10 @@ export default function DriverDashboard() {
             <p className="agent-subtitle">Accept, manage and update your assigned parcels</p>
           </div>
           <div className="topbar-right">
-            <span className="agent-name" style={{display:'flex',alignItems:'center',gap:6}}>
+            <button className="agent-name" style={{display:'flex',alignItems:'center',gap:6,background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:'inherit',color:'inherit'}}
+              onClick={() => setShowProfile(true)}>
               <TruckIcon size={15}/> {localStorage.getItem('staff_name') || 'Driver'}
-            </span>
+            </button>
             <button className="btn-logout" style={{display:'flex',alignItems:'center',gap:6}}
               onClick={() => { localStorage.clear(); window.location.href = '/' }}>
               <LogoutIcon size={14}/> Logout
@@ -71,16 +75,15 @@ export default function DriverDashboard() {
         <div className="filter-tabs">
           {FILTERS.map(f => (
             <button key={f.key} className={`filter-tab ${filter===f.key?'filter-active':''}`} onClick={() => setFilter(f.key)}>
-              {f.label}
-              <span className="filter-count">
-                {f.key==='all' ? parcels.length : parcels.filter(p=>p.status===f.key).length}
-              </span>
+              {f.label}<span className="filter-count">{f.key==='all'?parcels.length:parcels.filter(p=>p.status===f.key).length}</span>
             </button>
           ))}
         </div>
 
-        <DriverParcelList parcels={filtered} loading={loading} onRefresh={fetchParcels}/>
+        <DriverParcelList parcels={filtered} loading={loading} onRefresh={fetchParcels} toast={toast}/>
       </main>
+      <ToastContainer toasts={toasts} removeToast={removeToast}/>
+      {showProfile && <StaffProfileModal onClose={() => setShowProfile(false)}/>}
     </div>
   )
 }

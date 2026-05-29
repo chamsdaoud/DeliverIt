@@ -6,6 +6,7 @@ import UserTable from '../../components/admin/UserTable'
 import ParcelTable from '../../components/admin/ParcelTable'
 import CreateStaffModal from '../../components/admin/CreateStaffModal'
 import { ShieldIcon, LogoutIcon } from '../../components/Icons'
+import StaffProfileModal from '../../components/StaffProfileModal'
 import '../../styles/agent.css'
 import '../../styles/admin.css'
 
@@ -14,7 +15,8 @@ export default function AdminDashboard() {
   const [users, setUsers]           = useState([])
   const [parcels, setParcels]       = useState([])
   const [loading, setLoading]       = useState(true)
-  const [showCreate, setShowCreate] = useState(false)
+  const [showCreate, setShowCreate]   = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
 
   const fetchData = async () => {
     setLoading(true)
@@ -66,9 +68,10 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="topbar-right">
-            <span className="agent-name" style={{display:'flex',alignItems:'center',gap:6}}>
+            <button className="agent-name" style={{display:'flex',alignItems:'center',gap:6,background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:'inherit',color:'inherit'}}
+              onClick={() => setShowProfile(true)}>
               <ShieldIcon size={15}/> {localStorage.getItem('staff_name') || 'Admin'}
-            </span>
+            </button>
             <button className="btn-logout" style={{display:'flex',alignItems:'center',gap:6}} onClick={() => { localStorage.clear(); window.location.href = '/' }}>
               <LogoutIcon size={14}/> Logout
             </button>
@@ -86,6 +89,7 @@ export default function AdminDashboard() {
           onSuccess={() => { setShowCreate(false); fetchData() }}
         />
       )}
+      {showProfile && <StaffProfileModal onClose={() => setShowProfile(false)}/>}
     </div>
   )
 }

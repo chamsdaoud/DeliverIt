@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ParcelStatusHistory extends Model
 {
+    protected $table = 'parcel_status_history';
+
     protected $fillable = [
         'parcel_id',
         'status',

@@ -13,13 +13,18 @@ class Parcel extends Model
         'delivery_address', 'description', 'weight',
         'status', 'payment_method', 'delivery_type',
         'pickup_location', 'destination',
-        'failure_reason',
+        'failure_reason', 'refusal_reason',
         'rating', 'rating_comment', 'confirmed_at',
         'created_by', 'delivery_man_id',
+        'payment_proof',
+        'driver_lat', 'driver_lng', 'location_updated_at',
     ];
 
     protected $casts = [
-        'confirmed_at' => 'datetime',
+        'confirmed_at'        => 'datetime',
+        'location_updated_at' => 'datetime',
+        'driver_lat'          => 'float',
+        'driver_lng'          => 'float',
     ];
 
     public function deliveryMan()

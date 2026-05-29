@@ -48,7 +48,7 @@ export default function StaffRegisterModal({ onClose, onSwitchLogin }) {
           </div>
           <div className="form-group">
             <label>Email Address</label>
-            <input type="email" placeholder="staff@deliverit.dz" value={form.email} onChange={update('email')} />
+            <input type="text" placeholder="staff@deliverit.dz" value={form.email} onChange={update('email')} />
           </div>
           <div className="form-group">
             <label>Password</label>
